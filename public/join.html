@@ -50,6 +50,8 @@
             <h3>Answer:</h3>
             <input type="text" name="answer" id="answer">
             <button onclick="submitAnswer()" id="submitAnswer">Submit</button>
+
+            <h3>Total answers in pool: <span id="numAnswers"></span></h3>
         </div>
     </div>
 
@@ -66,9 +68,7 @@
 
             document.getElementById('answerInput').hidden = false;
 
-            console.log(gameId)
-
-            fetch(`/api/hasAnswered?gameId=${gameId}&userId=${getCookie("userId")}`)
+            fetch(`/api/hasAnswered?gameId=${gameId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.hasAnswered) {
@@ -93,7 +93,7 @@
 
             document.getElementById('answerInput').hidden = false;
 
-            fetch(`/api/hasAnswered?gameId=${gameId}&userId=${getCookie("userId")}`)
+            fetch(`/api/hasAnswered?gameId=${gameId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.hasAnswered) {
@@ -110,7 +110,6 @@
             let answer = document.getElementById('answer').value;
 
             let submission = {
-                userId: getCookie("userId"),
                 gameId: gameId,
                 answer: answer
             };
@@ -129,6 +128,24 @@
 
             document.getElementById('submitAnswer').disabled = true;
         }
+    </script>
+
+    <script>
+        let socket = new WebSocket(`ws://${window.location.host}`);
+
+        socket.onmessage = (data) => {
+            let message = JSON.parse(data.data);
+            
+            if (message.question) document.getElementById('question').innerText = message.question;
+            
+            if (message.numAnswers != null) document.getElementById('numAnswers').innerText = message.numAnswers;
+        };
+
+        socket.onopen = () => {
+            socket.send(JSON.stringify({
+                gameId: gameId,
+            }));
+        };
     </script>
 </body>
 </html>

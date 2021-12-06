@@ -1,23 +1,23 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+
 const QRCode = require("qrcode");
-const { WebSocket } = require("ws");
+const WebSocket = require("ws");
 
 var Cache = require("ttl");
 var cache = new Cache({
   ttl: 60 * 60 * 1000,
-  capacity: 100,
 });
 
-const server = http.createServer(app);
-
-const wss = new WebSocket.Server({ server });
+const wsServer = new WebSocket.Server({ noServer: true });
 
 app.use(express.static("public", { extensions: ["html"] }));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 const generateGameId = () => {
   const validCharacters = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -33,9 +33,10 @@ const generateGameId = () => {
 // Admin actions
 app.get("/api/newGame", async (req, res) => {
   let game = {
-    admin: req.query.userId,
+    admin: req.cookies.userId,
     gameId: generateGameId(),
     answers: [],
+    question: null,
   };
 
   cache.put(`game-${game.gameId}`, game);
@@ -50,7 +51,8 @@ app.get("/api/newGame", async (req, res) => {
 });
 
 app.post("/api/setQuestion", (req, res) => {
-  const { userId, gameId, question } = req.body;
+  const { gameId, question } = req.body;
+  const { userId } = req.cookies;
   const game = cache.get(`game-${gameId}`);
 
   if (!game) return res.status(404).send("Game not found");
@@ -74,7 +76,8 @@ app.get("/api/getQuestion", (req, res) => {
 });
 
 app.post("/api/submitAnswer", (req, res) => {
-  const { userId, gameId, answer } = req.body;
+  const { gameId, answer } = req.body;
+  const { userId } = req.cookies;
   const game = cache.get(`game-${gameId}`);
 
   if (!game) return res.status(404).send("Game not found");
@@ -87,7 +90,8 @@ app.post("/api/submitAnswer", (req, res) => {
 });
 
 app.get("/api/hasAnswered", (req, res) => {
-  const { userId, gameId } = req.query;
+  const { gameId } = req.query;
+  const { userId } = req.cookies;
   const game = cache.get(`game-${gameId}`);
 
   if (!game) return res.status(404).send("Game not found");
@@ -112,22 +116,45 @@ app.get("/api/allAnswers", (req, res) => {
   res.json(game.answers);
 });
 
-app.listen(process.env.PORT || 3000, () =>
+const server = app.listen(process.env.PORT || 3000, () =>
   console.log("Listening on port 3000")
 );
 
+server.on("upgrade", (request, socket, head) => {
+  wsServer.handleUpgrade(request, socket, head, (socket) => {
+    wsServer.emit("connection", socket, request);
+  });
+});
+
 // WebSocket actions
-wss.on("connection", (ws) => {
+wsServer.on("connection", (ws, req) => {
+  let gameId = "";
+
   ws.on("message", (message) => {
-    const { userId, gameId } = JSON.parse(message);
-    const game = cache.get(`game-${gameId}`);
+    message = JSON.parse(message);
 
-    if (!game) return ws.send(JSON.stringify({ error: "Game not found" }));
-
-    if (game.admin === userId) {
-      ws.send(JSON.stringify({ isAdmin: true }));
+    if (message.gameId) {
+      gameId = message.gameId;
+      const game = cache.get(`game-${gameId}`);
+      if (game) {
+        ws.send(
+          JSON.stringify({
+            numAnswers: game.answers.length,
+            question: game.question,
+          })
+        );
+      }
     }
+  });
 
-    ws.send(JSON.stringify({ answers: game.answers }));
+  cache.on("put", function (key, val, _ttl) {
+    if (key === `game-${gameId}`) {
+      ws.send(
+        JSON.stringify({
+          numAnswers: val.answers.length,
+          question: val.question,
+        })
+      );
+    }
   });
 });

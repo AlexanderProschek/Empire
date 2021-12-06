@@ -49,6 +49,8 @@
         <h4>Set your own answer <span style="color:gray">(optional)</span></h3>
         <input type="text" name="answer" id="answer" required>
         <button value="Submit" onclick="submitAnswer()" id="submitAnswer">Submit</button>
+
+        <h3>Total answers in pool: <span id="numAnswers"></span></h3>
     </div>
 
     <script>
@@ -56,7 +58,7 @@
         let gameQR = document.getElementById('gameQR');
         var gameId = "";
 
-        fetch('/api/newGame?userId=' + getCookie("userId"))
+        fetch('/api/newGame')
             .then(res => res.json())
             .then(data => {
                 gameId = data.gameId;
@@ -71,7 +73,6 @@
             let answer = document.getElementById('answer').value;
 
             let submission = {
-                userId: getCookie("userId"),
                 gameId: gameId,
                 answer: answer
             };
@@ -98,7 +99,6 @@
             let question = document.getElementById('question').value;
 
             let submission = {
-                userId: getCookie("userId"),
                 gameId: gameId,
                 question: question
             };
@@ -112,5 +112,27 @@
             });
         }
     </script>
+
+    <script>
+        let socket = new WebSocket(`ws://${window.location.host}`);
+
+        socket.onmessage = (data) => {
+            let message = JSON.parse(data.data);
+
+            console.log(message);
+            
+            if (message.numAnswers != null) document.getElementById('numAnswers').innerText = message.numAnswers;
+        };
+
+        (async ()=>{
+            while (gameId === "") await new Promise(resolve => setTimeout(resolve, 50));
+            while (socket.readyState !== WebSocket.OPEN) await new Promise(resolve => setTimeout(resolve, 50));
+
+            socket.send(JSON.stringify({
+                gameId: gameId,
+            }));    
+        })()
+
+        </script>
 </body>
 </html>
