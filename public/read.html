@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire</title>
+</head>
+<body>
+    <link rel="stylesheet" href="style.css">
+
+    <div class="middle">
+        <a href="/">Back</a>
+        <div class="card" onclick="clickHandler()">
+            <h3 id="answer">Cycle through answers</h3>
+        </div>
+        <p>Round: <span id="round">1</span></p>
+        <p>Card <span id="num"></span>/<span id="count"></span></p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        var gameId = urlParams.get('gameId');
+
+        if (gameId == null) {
+            window.location.href = "/";
+        }
+
+        let answers = null;
+        let round = 1;
+        let num = 0;
+
+        document.getElementById('round').innerHTML = round;
+        document.getElementById('num').innerHTML = num;
+
+        fetch("/api/listAnswers?gameId=" + gameId)
+            .then(response => response.json())
+            .then(data => {
+                answers = data;
+                document.getElementById("count").innerHTML = data.length;
+            }).catch(err => {
+                window.location.href = "/";
+            });
+
+        const clickHandler = () => {
+            if (answers === null || round > 2) {
+                return;
+            }
+
+            if (num > answers.length) {
+                return;
+            }
+            
+            num++;
+            if (num > answers.length) {
+                num = 0;
+                round++;
+                document.getElementById('round').innerHTML = round < 3 ? round : "Done";
+
+                if (round < 3) document.getElementById('answer').innerHTML = "See answers again";
+                else document.getElementById('answer').innerHTML = "No more rounds";
+            } else {
+                document.getElementById('answer').innerHTML = answers[num-1];
+            }
+
+
+            document.getElementById('num').innerHTML = num;
+
+        };
+        
+    </script>
+</body>
+</html>

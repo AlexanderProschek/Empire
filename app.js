@@ -65,6 +65,21 @@ app.post("/api/setQuestion", (req, res) => {
   res.send("Success");
 });
 
+app.get("/api/listAnswers", (req, res) => {
+  const { gameId } = req.query;
+  const { userId } = req.cookies;
+  const game = cache.get(`game-${gameId}`);
+
+  if (!game) return res.status(404).send("Game not found");
+
+  if (game.admin !== userId)
+    return res.status(403).send("You are not the admin of this game");
+
+  cache.del(`game-${gameId}`);
+
+  res.json(game.answers.map((a) => a.answer).sort(() => Math.random() - 0.5));
+});
+
 // General actions
 app.get("/api/getQuestion", (req, res) => {
   const { gameId } = req.query;
