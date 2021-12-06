@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire</title>
+    <script>
+        function setCookie(cname, cvalue, exdays) {
+            const d = new Date();
+            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            let expires = "expires="+ d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+
+        function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return null;
+        }
+
+        if (!getCookie("userId"))
+            setCookie("userId", crypto.randomUUID(), 30);
+    </script>
+</head>
+<body>
+    <link rel="stylesheet" href="style.css">
+
+    <div class="middle">
+        <a href="/">Back</a>
+        <h1>Let others join</h1>
+        <p>Code: <span id="gameIdCode"></span></p>
+        <img id="gameQR" /> <br>
+
+        <h4>Set question <span style="color:gray">(optional)</span></h3>
+        <input type="text" name="question" id="question" required>
+        <button value="Submit" onclick="setQuestion()" id="setQuestion">Submit</button>
+
+        <h4>Set your own word <span style="color:gray">(optional)</span></h3>
+        <input type="text" name="word" id="word" required>
+        <button value="Submit" onclick="submitWord()" id="submitWord">Submit</button>
+    </div>
+
+    <script>
+        let gameIdCode = document.getElementById('gameIdCode');
+        let gameQR = document.getElementById('gameQR');
+        var gameId = "";
+
+        fetch('/api/newGame?userId=' + getCookie("userId"))
+            .then(res => res.json())
+            .then(data => {
+                gameId = data.gameId;
+
+                gameIdCode.innerText = data.gameId;
+                gameQR.src = data.gameQR;
+            });
+    </script>
+
+    <script>
+        const submitWord = () => {
+            let word = document.getElementById('word').value;
+
+            let submission = {
+                userId: getCookie("userId"),
+                gameId: gameId,
+                word: word
+            };
+            
+            fetch('/api/submitWord', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(submission)
+            });
+
+            document.getElementById('word').attributes.type.value = 'password';
+            document.getElementById('word').value = 'thisisalongexampleword';
+            document.getElementById('word').attributes.readOnly = true;
+
+            document.getElementById('submitWord').disabled = true;
+        }
+    </script>
+
+    <script>
+        const setQuestion = () => {
+            let word = document.getElementById('word').value;
+
+            let submission = {
+                userId: getCookie("userId"),
+                gameId: gameId,
+                question: question
+            };
+            
+            fetch('/api/setQuestion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(submission)
+            });
+        }
+    </script>
+</body>
+</html>

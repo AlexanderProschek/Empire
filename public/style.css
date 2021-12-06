@@ -1,0 +1,20 @@
+/* Center everything horizontally */
+body {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.middle {
+  width: 20em;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+textarea {
+  resize: none;
+}
