@@ -44,11 +44,11 @@
 
         <h4>Set question <span style="color:gray">(optional)</span></h3>
         <input type="text" name="question" id="question" required>
-        <button value="Submit" onclick="setQuestion()" id="setQuestion">Submit</button>
+        <button value="Submit" onclick="setQuestion()" id="setQuestion">Update</button>
 
-        <h4>Set your own word <span style="color:gray">(optional)</span></h3>
-        <input type="text" name="word" id="word" required>
-        <button value="Submit" onclick="submitWord()" id="submitWord">Submit</button>
+        <h4>Set your own answer <span style="color:gray">(optional)</span></h3>
+        <input type="text" name="answer" id="answer" required>
+        <button value="Submit" onclick="submitAnswer()" id="submitAnswer">Submit</button>
     </div>
 
     <script>
@@ -67,16 +67,16 @@
     </script>
 
     <script>
-        const submitWord = () => {
-            let word = document.getElementById('word').value;
+        const submitAnswer = () => {
+            let answer = document.getElementById('answer').value;
 
             let submission = {
                 userId: getCookie("userId"),
                 gameId: gameId,
-                word: word
+                answer: answer
             };
             
-            fetch('/api/submitWord', {
+            fetch('/api/submitAnswer', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -84,17 +84,18 @@
                 body: JSON.stringify(submission)
             });
 
-            document.getElementById('word').attributes.type.value = 'password';
-            document.getElementById('word').value = 'thisisalongexampleword';
-            document.getElementById('word').attributes.readOnly = true;
+            document.getElementById('answer').attributes.type.value = 'password';
+            document.getElementById('answer').value = 'thisisalongexampleanswer';
+            document.getElementById('answer').readOnly = true;
 
-            document.getElementById('submitWord').disabled = true;
+            document.getElementById('submitAnswer').disabled = true;
         }
     </script>
 
     <script>
         const setQuestion = () => {
-            let word = document.getElementById('word').value;
+            console.log("Setting question");
+            let question = document.getElementById('question').value;
 
             let submission = {
                 userId: getCookie("userId"),

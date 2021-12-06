@@ -37,18 +37,97 @@
     <link rel="stylesheet" href="style.css">
 
     <div class="middle">
+        <a href="/">Back</a>
+        <h1>Type in your answer to the question</h1>
+
+        <h3>Game ID:</h3>
         <input type="text" name="gameId" id="gameId">
-        <input type="text" name="word" id="word">
+        <button onclick="joinGame()" id="joinButton">Join</button>
+
+        <div id="answerInput" hidden>
+            <h3>Question:</h3> <p id="question"><span style="color: gray;">Question not set yet</span></p>
+
+            <h3>Answer:</h3>
+            <input type="text" name="answer" id="answer">
+            <button onclick="submitAnswer()" id="submitAnswer">Submit</button>
+        </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const gameId = urlParams.get('gameId');
+        var gameId = urlParams.get('gameId');
 
         if (gameId) {
             let gameIdInput = document.getElementById('gameId');
             gameIdInput.value = gameId;
+            gameIdInput.disabled = true;
             gameIdInput.readOnly = true;
+            document.getElementById('joinButton').disabled = true;
+
+            document.getElementById('answerInput').hidden = false;
+
+            console.log(gameId)
+
+            fetch(`/api/hasAnswered?gameId=${gameId}&userId=${getCookie("userId")}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hasAnswered) {
+                        document.getElementById('answer').attributes.type.value = 'password';
+                        document.getElementById('answer').value = 'thisisalongexampleanswer';
+                        document.getElementById('answer').readOnly = true;
+
+                        document.getElementById('submitAnswer').disabled = true;
+                    }
+                });
+        }
+    </script>
+
+    <script>
+        function joinGame() {
+            gameId = document.getElementById('gameId').value;
+
+            let gameIdInput = document.getElementById('gameId');
+            gameIdInput.disabled = true;
+            gameIdInput.readOnly = true;
+            document.getElementById('joinButton').disabled = true;
+
+            document.getElementById('answerInput').hidden = false;
+
+            fetch(`/api/hasAnswered?gameId=${gameId}&userId=${getCookie("userId")}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hasAnswered) {
+                        document.getElementById('answer').attributes.type.value = 'password';
+                        document.getElementById('answer').value = 'thisisalongexampleanswer';
+                        document.getElementById('answer').readOnly = true;
+
+                        document.getElementById('submitAnswer').disabled = true;
+                    }
+                });
+        }
+
+        function submitAnswer() {
+            let answer = document.getElementById('answer').value;
+
+            let submission = {
+                userId: getCookie("userId"),
+                gameId: gameId,
+                answer: answer
+            };
+            
+            fetch('/api/submitAnswer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(submission)
+            });
+
+            document.getElementById('answer').attributes.type.value = 'password';
+            document.getElementById('answer').value = 'thisisalongexampleanswer';
+            document.getElementById('answer').readOnly = true;
+
+            document.getElementById('submitAnswer').disabled = true;
         }
     </script>
 </body>
