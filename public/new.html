@@ -116,7 +116,7 @@
     </script>
 
     <script>
-        let socket = new WebSocket(`ws://${window.location.host}`);
+        let socket = new WebSocket(`ws${location.protocol === 'https:' ? "s" : ""}://${window.location.host}`);
 
         socket.onmessage = (data) => {
             let message = JSON.parse(data.data);

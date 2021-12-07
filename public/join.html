@@ -56,10 +56,31 @@
     </div>
 
     <script>
+        const connectWS = () => {
+            let socket = new WebSocket(`ws${location.protocol === 'https:' ? "s" : ""}://${window.location.host}`);
+
+            socket.onmessage = (data) => {
+                let message = JSON.parse(data.data);
+                
+                if (message.question) document.getElementById('question').innerText = message.question;
+                
+                if (message.numAnswers != null) document.getElementById('numAnswers').innerText = message.numAnswers;
+            };
+
+            socket.onopen = () => {
+                socket.send(JSON.stringify({
+                    gameId: gameId,
+                }));
+            };
+        };
+    </script>
+
+    <script>
         const urlParams = new URLSearchParams(window.location.search);
         var gameId = urlParams.get('gameId');
 
         if (gameId) {
+            connectWS();
             let gameIdInput = document.getElementById('gameId');
             gameIdInput.value = gameId;
             gameIdInput.disabled = true;
@@ -85,6 +106,8 @@
     <script>
         function joinGame() {
             gameId = document.getElementById('gameId').value;
+
+            connectWS();
 
             let gameIdInput = document.getElementById('gameId');
             gameIdInput.disabled = true;
@@ -128,24 +151,6 @@
 
             document.getElementById('submitAnswer').disabled = true;
         }
-    </script>
-
-    <script>
-        let socket = new WebSocket(`ws://${window.location.host}`);
-
-        socket.onmessage = (data) => {
-            let message = JSON.parse(data.data);
-            
-            if (message.question) document.getElementById('question').innerText = message.question;
-            
-            if (message.numAnswers != null) document.getElementById('numAnswers').innerText = message.numAnswers;
-        };
-
-        socket.onopen = () => {
-            socket.send(JSON.stringify({
-                gameId: gameId,
-            }));
-        };
     </script>
 </body>
 </html>

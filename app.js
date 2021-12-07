@@ -43,7 +43,7 @@ app.get("/api/newGame", async (req, res) => {
 
   let gameQR = await QRCode.toDataURL(
     `http://${process.env.HOST || "localhost"}:${
-      process.env.PORT || 3000
+      process.env.PORT || ""
     }/join?gameId=${game.gameId}`
   );
 
@@ -132,7 +132,7 @@ app.get("/api/allAnswers", (req, res) => {
 });
 
 const server = app.listen(process.env.PORT || 3000, () =>
-  console.log("Listening on port 3000")
+  console.log(`Listening on port ${process.env.PORT || 3000}`)
 );
 
 server.on("upgrade", (request, socket, head) => {
