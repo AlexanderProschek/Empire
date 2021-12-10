@@ -42,8 +42,10 @@ app.get("/api/newGame", async (req, res) => {
   cache.put(`game-${game.gameId}`, game);
 
   let gameQR = await QRCode.toDataURL(
-    `http://${process.env.HOST || "localhost"}:${
-      process.env.PORT || ""
+    `http${process.env.ENVIRONMENT == "PROD" ? "s" : ""}://${
+      process.env.HOST || "localhost"
+    }:${
+      process.env.ENVIRONMENT != "PROD" ? process.env.PORT || "" : ""
     }/join?gameId=${game.gameId}`
   );
 
