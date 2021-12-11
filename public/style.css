@@ -6,7 +6,7 @@ body {
 }
 
 .middle {
-  width: 20em;
+  width: 25em;
 }
 
 form {
@@ -31,4 +31,17 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+hr {
+  margin-top: 1.5em;
+}
+
+.gameQR {
+  width: 15em;
+  height: 15em;
+}
+
+.gameIdCode {
+  font-weight: bold;
 }
