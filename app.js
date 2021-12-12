@@ -99,8 +99,6 @@ app.post("/api/submitAnswer", (req, res) => {
 
   if (!game) return res.status(404).send("Game not found");
 
-  game.answers = game.answers.filter((a) => a.userId !== userId);
-
   game.answers.push({ userId, answer });
   cache.put(`game-${game.gameId}`, game);
   res.send("Success");
