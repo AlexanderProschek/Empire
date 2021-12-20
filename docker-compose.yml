@@ -1,0 +1,8 @@
+version: '3'
+services:
+  empire:
+    build:
+      context: ./
+    restart: unless-stopped
+    ports:
+      - 58320:80
